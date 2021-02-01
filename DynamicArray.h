@@ -1,19 +1,24 @@
 #ifndef __DYNAMIC_ARRAY_H
 #define __DYNAMIC_ARRAY_H
 
+#include <stdlib.h>
+#include <string.h>
+
+#define _INITIAL_SIZE 16
+
 typedef struct DynamicArray DYNARR;
 
 struct DynamicArray {
-    int* array;
+    char** strings;
     int count;
-    int array_size;
+    int capacity;
 };
 
-void init_dynamic_array(struct DynamicArray*);
+void init_dynamic_array(struct DynamicArray*, int);
 
-void resize_array(struct DynamicArray*);
+void _resize_array(struct DynamicArray*);
 
-void add_array(struct DynamicArray*, int);
+void add_array(struct DynamicArray*, char*);
 
 void remove_array(struct DynamicArray*, int);
 
