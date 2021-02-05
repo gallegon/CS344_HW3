@@ -10,6 +10,8 @@
 
 #include "Command.h"
 #include "DynamicArray.h"
+//#include "smallsh.h"
+
 
 void reap_exited_children(DYNARR*);
 void reap_children(DYNARR*);
@@ -17,11 +19,13 @@ void run_foreground(COMMAND*, DYNARR*);
 void run_background(COMMAND*, DYNARR*);
 void ignore_sig_int(int);
 
+
 void ignore_sig_int(int sig_number) {
     write(1, "\n: ", 3);
     signal(SIGINT, ignore_sig_int);
 }
 
+/*
 void reap_exited_children(DYNARR* d) {
     int w_status;
     for (int i = 0; i < d->count; ++i) {
@@ -54,7 +58,7 @@ void run_foreground(COMMAND* c, DYNARR* d) {
             dup2(output_fd, 1);
             close(output_fd);
             dup2(stdout_cpy, 1);
-            close(stdout_cpy);
+        close(stdout_cpy);
         }
 
         if (c->input_redirection == 1) {
@@ -135,38 +139,56 @@ void run_background(COMMAND* c, DYNARR* d) {
         add_array(d, child_pid);
     }
 }
+*/
 
 void run_sh() {
-    DYNARR background_pids;
+    //DYNARR background_pids;
+	 
+    //init_dynamic_array(&background_pids);
     
-    init_dynamic_array(&background_pids);
-    struct sigaction SIGINT_action = {0};
+	struct sigaction SIGINT_action = {0};
+	bool running = true;
 
-    SIGINT_action.sa_handler = ignore_sig_int;
-    sigfillset(&SIGINT_action.sa_mask);
-    SIGINT_action.sa_flags = 0;
+   SIGINT_action.sa_handler = ignore_sig_int;
+   sigfillset(&SIGINT_action.sa_mask);
+   SIGINT_action.sa_flags = 0;
+		
 
+	while(running) {
+   	signal(SIGINT, ignore_sig_int);
+      COMMAND command_line;
 
-    while(1) {
-        signal(SIGINT, ignore_sig_int);
-        COMMAND command_line;
+      //int reap = 0;
 
-        //pid_t child_pid;
-        int reap = 0;
+		//holds status for last command executed
+		int status = 0;
 
-        Command(&command_line);
-
-        //reap_exited_children(&background_pids);
-
-        char* buffer = NULL;
-        size_t n = 2048;
+      init_command(&command_line);
         
-        write(1, ": ", 2);
-        fflush(stdout);
+		char* buffer = NULL;
+      size_t n = 2048;
         
-        getline(&buffer, &n, stdin);
-        load_command(&command_line, buffer);
+		write(1, ": ", 2);
+		fflush(stdout);
+        
+		getline(&buffer, &n, stdin);
+     	remove_newline(buffer);
 
+		parse_command(&command_line, buffer);
+
+		print_command(&command_line);
+		
+		if(command_line.is_builtin == true) {
+			if(strcmp(command_line.builtin->builtin_type, "exit") == 0) {
+				running = false;
+			}
+			else if(strcmp(command_line.builtin->builtin_type, "cd") == 0) {
+				cd_smallsh(command_line.builtin);
+			}
+		}
+	/*
+		  load_command(&command_line, buffer);
+			
         if (strcmp(command_line.input_string, "exit") == 0) {
             exit(0);
         }
@@ -182,9 +204,10 @@ void run_sh() {
             reap_exited_children(&background_pids);
         }
         //free_command(&command_line);
+		  */
     }
 }
-
+/*
 void test_loop() {
     COMMAND c;
     Command(&c);
@@ -209,7 +232,7 @@ void test_loop() {
 
     printf("#####################################################\n");
     
-    /*
+    
     DYNARR d;
     init_dynamic_array(&d);
 
@@ -234,10 +257,11 @@ void test_loop() {
     for (int i = 0; i < d.count; ++i) {
         printf("arr[%d]: %d\n", i, d.array[i]);
     }
-    */
+    
     free(buffer);
     free_command(&c);
 }
+*/
 
 int main() {
     //signal(SIGINT, ignore_sig_int);

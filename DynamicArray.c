@@ -1,8 +1,5 @@
 #include "DynamicArray.h"
 
-//#include <stdlib.h>
-//#include <string.h>
-
 /*
 void init_dynamic_array(struct DynamicArray* d, int size) {
     //d->array = (int*) malloc(sizeof(int) * 20);
@@ -16,7 +13,6 @@ void init_dynamic_array(struct DynamicArray* d, int size) {
 */
 
 void init_dynamic_array(DYNARR* d, int size) {
-	//d = (DYNARR*) malloc(sizeof(DYNARR));	
 	d->strings = (char**) malloc(sizeof(char*) * size);
 	d->count = 0;
 
@@ -53,17 +49,17 @@ void _resize_array(DYNARR* d) {
 		strcpy(temp[i], d->strings[i]);
 	}
 
+	//free strings in array and re-initialize with new size
 	free_dynamic_array(d);
-	//free(d);
-	
-	//d = (DYNARR*) malloc(sizeof(DYNARR));
 	init_dynamic_array(d, new_size);
 
+	//copy array back into re-sized array and free strings in temp
 	for (int i = 0; i < old_size; ++i) {
 		add_array(d, temp[i]);
 		free(temp[i]);
 	}
 
+	//free temp pointer
 	free(temp);
 	temp = NULL;
 }
@@ -73,14 +69,9 @@ void free_dynamic_array(DYNARR* d) {
 		free(d->strings[i]);
 		d->strings[i] = NULL;
 	}
+	
+	free(d->strings);
 
-	/*
-	d->count = NULL;
-	d->capacity = NULL;
-	*/
-
-	//free(d);
-	//d = NULL;
 }
 /*
 void resize_array(struct DynamicArray* d) {
