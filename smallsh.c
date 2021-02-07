@@ -10,6 +10,8 @@
 
 #include "Command.h"
 #include "DynamicArray.h"
+#include "PIDList.h"
+
 //#include "smallsh.h"
 
 
@@ -26,130 +28,87 @@ void ignore_sig_int(int sig_number) {
 }
 
 /*
-void reap_exited_children(DYNARR* d) {
-    int w_status;
-    for (int i = 0; i < d->count; ++i) {
-        waitpid(d->array[1], &w_status, WNOHANG);
-        if ((WIFEXITED(w_status) == 1)) {
-            waitpid(d->array[i], &w_status, 0);
-            remove_array(d, d->array[i]);
-            if (WIFSIGNALED(w_status) == 1) {
-                printf("child terminated by signal: %d\n", WTERMSIG(w_status));
-                fflush(stdout);
-            } 
-        }
-    }
+ * Name 
+ * 	exec_command(struct Command*, Struct PIDList*, int*)
+ *		
+ *
+ * Description
+ * 	Used to execute a command parsed from the smallsh command line.  When 
+ * 	exec_command is called, it forks a child and uses the exec() family of
+ * 	functions to start a program described by the string array in the passed
+ * 	Command struct.  If either exec() or fork() fails, then status is set to
+ * 	the appropriate exit status so smallsh can access it.  Otherwise exec()
+ * 	runs the program, and uses waitpid() appropriately depending on if the
+ * 	Command is a background process or not. Adds the child PID to a list that
+ * 	the parent can later use to clean up zombie processes.
+ *
+ * Return 
+ * 	None (void)
+ *
+ * Notes
+ * 	Uses some code from example on wait(2) manpage 
+ *
+ */
+
+void exec_command(COMMAND* c, PIDLIST* pids, int* status) {
+	pid_t child_pid, w;
+	int wstatus, exec_status;
+
+	child_pid = fork();
+
+	if (child_pid == -1) {
+		perror("fork");	
+		exit(EXIT_FAILURE);
+	}
+	
+	// child process
+	if (child_pid == 0) {
+		if (c->input_redirection == true) {
+			//set input redirection to input_path
+		}
+		if (c->output_redirection) {
+			//set output redirection to output_path
+		}
+		if (c->is_background_process == true) {
+			if (c->input_redirection == false) {
+				//set redirection to /dev/null
+			}
+			if (c->output_redirection == false) {
+				// set redirection to /dev/null
+			}
+		}
+		//exec()
+		exec_status = execvp(c->arguments->strings[0], c->arguments->strings);
+		
+		//check if exec() succeeded or failed
+		if (exec_status == -1) {
+			perror("exec");
+			exit(EXIT_FAILURE);
+		}
+	}
+	
+	// parent
+	else {
+		if (c->is_background_process == true) {
+			//dont wait for the child to finish termination
+			//add the PID to the background PID array
+			//not sure whether to use waitpid() here or not
+		}
+		else {
+			//wait for the child to finish termination
+			w = waitpid(child_pid, &wstatus, 0); //check if it doesnt mess
+															 // anything up with 0 param
+		}
+	}
 }
-
-void run_foreground(COMMAND* c, DYNARR* d) {
-    int input_fd, output_fd, exit_status;
-    
-    pid_t child_pid = fork();
-    
-    if (child_pid == -1) {
-        perror("fork failed");
-        fflush(stderr);
-    }
-
-    if (child_pid == 0) {
-        if(c->output_redirection == 1) {
-            output_fd = open(c->output_path, O_CREAT | O_WRONLY | O_TRUNC);
-            int stdout_cpy = dup(1);
-            dup2(output_fd, 1);
-            close(output_fd);
-            dup2(stdout_cpy, 1);
-        close(stdout_cpy);
-        }
-
-        if (c->input_redirection == 1) {
-            if ((input_fd = open(c->input_path, O_RDONLY)) == -1) {
-                perror("failed to redirect stdin");
-                fflush(stderr);
-                return;
-            }
-            else {            
-                dup2(input_fd, 0);
-                close(input_fd);
-            }
-        }
-
-        if (execvp(c->arguments[0], c->arguments) == -1) {
-            perror("exec() failure");
-            fflush(stderr);
-        }
-    }
-    else {
-        wait(&exit_status);
-
-        if (WIFSIGNALED(exit_status)) {
-            printf("child terminated by signal: %d\n", WTERMSIG(exit_status));
-            fflush(stdout);
-        } 
-    }
-}
-
-void run_background(COMMAND* c, DYNARR* d) {
-    int input_fd, output_fd;
-
-    int child_pid = fork();
-
-    int w_status;
-    //add_array(d, child_pid);
-    
-    if (child_pid == 1) {
-        perror("fork failed");
-        fflush(stderr);
-    }
-
-    if (child_pid == 0) {
-        if(c->output_redirection == 1) {
-            output_fd = open(c->output_path, O_CREAT | O_WRONLY | O_TRUNC);
-            int stdout_cpy = dup(1);
-            dup2(output_fd, 1);
-            close(output_fd);
-            dup2(1, stdout_cpy);
-            close(stdout_cpy);
-        }
-        else {
-            output_fd = open("/dev/null", O_WRONLY);
-            dup2(output_fd, 1);
-            close(output_fd);
-        }
-
-        if (c->input_redirection == 1) {
-            if ((input_fd = open(c->input_path, O_RDONLY)) == -1) {
-                perror("failed to redirect stdin");
-                fflush(stderr);
-                return;
-            }
-            else {            
-                dup2(input_fd, 0);
-                close(input_fd);
-            }
-        }
-        if(execvp(c->arguments[0], c->arguments) == -1) {
-            printf("'%s'\n", c->input_string);
-            fflush(stdout);
-            perror("exec() failure");
-            fflush(stderr);
-        }
-    }
-    else {
-        waitpid(child_pid, &w_status, WNOHANG);
-        add_array(d, child_pid);
-    }
-}
-*/
 
 void run_sh() {
-    //DYNARR background_pids;
-	 
-    //init_dynamic_array(&background_pids);
-    
 	struct sigaction SIGINT_action = {0};
-	bool running = true;
-
-   SIGINT_action.sa_handler = ignore_sig_int;
+	bool running = true;	
+	//list of parent's child processes
+	PIDLIST child_procs;
+   
+	SIGINT_action.sa_handler = ignore_sig_int;
    sigfillset(&SIGINT_action.sa_mask);
    SIGINT_action.sa_flags = 0;
 		
@@ -158,16 +117,14 @@ void run_sh() {
    	signal(SIGINT, ignore_sig_int);
       COMMAND command_line;
 
-      //int reap = 0;
-
 		//holds status for last command executed
 		int status = 0;
 
       init_command(&command_line);
-        
+       
 		char* buffer = NULL;
       size_t n = 2048;
-        
+      
 		write(1, ": ", 2);
 		fflush(stdout);
         
@@ -175,93 +132,18 @@ void run_sh() {
      	remove_newline(buffer);
 
 		parse_command(&command_line, buffer);
-
-		print_command(&command_line);
+		
+		//print_command(&command_line);
 		
 		if(command_line.is_builtin == true) {
-			if(strcmp(command_line.builtin->builtin_type, "exit") == 0) {
-				running = false;
-			}
-			else if(strcmp(command_line.builtin->builtin_type, "cd") == 0) {
-				cd_smallsh(command_line.builtin);
-			}
+			handle_builtin(command_line.builtin, &status, &running);
 		}
-	/*
-		  load_command(&command_line, buffer);
-			
-        if (strcmp(command_line.input_string, "exit") == 0) {
-            exit(0);
-        }
-        else if (command_line.is_background_process == 0 && (strcmp(command_line.input_string, "") != 0)) {
-            run_foreground(&command_line, &background_pids);
-        }
-        else if (command_line.is_background_process == 1 && (strcmp(command_line.input_string, "") != 0)) {
-            run_background(&command_line, &background_pids);
-            reap = 1;
-        }
-        free_command(&command_line);
-        if (reap) {
-            reap_exited_children(&background_pids);
-        }
-        //free_command(&command_line);
-		  */
-    }
+    	else {
+			exec_command(&command_line, &child_procs, &status);
+		}
+	 }
+	 //clean up children after exit or ??sigstop??
 }
-/*
-void test_loop() {
-    COMMAND c;
-    Command(&c);
-    char* buffer = NULL;
-    size_t n = 2048;
-    printf("enter a string: ");
-    getline(&buffer, &n, stdin);
-
-    //expand_pid(buffer);
-    load_command(&c, buffer);
-
-    for (int i = 0; i < c.command_count; ++i) {
-        printf("%s\n", c.arguments[i]);
-    }
-
-    printf("Is comment?: %d\n", c.is_comment);
-    printf("Is background proc?: %d\n", c.is_background_process);
-    printf("Input redirection?: %d\n", c.input_redirection);
-    printf("output redirection?: %d\n", c.output_redirection);
-    printf("Input path: %s\n", c.input_path);
-    printf("output path: %s\n", c.output_path);
-
-    printf("#####################################################\n");
-    
-    
-    DYNARR d;
-    init_dynamic_array(&d);
-
-    add_array(&d, 10);
-    add_array(&d, 9);
-
-
-    for (int i = 0; i < d.count; ++i) {
-        printf("arr[%d]: %d\n", i, d.array[i]);
-    }
-
-    printf("\nRemoving 9!\n");
-    remove_array(&d, 9);
-
-    for (int i = 0; i < d.count; ++i) {
-        printf("arr[%d]: %d\n", i, d.array[i]);
-    }
-
-    printf("\nRemoving 10!\n");
-
-    remove_array(&d, 10);
-    for (int i = 0; i < d.count; ++i) {
-        printf("arr[%d]: %d\n", i, d.array[i]);
-    }
-    
-    free(buffer);
-    free_command(&c);
-}
-*/
 
 int main() {
     //signal(SIGINT, ignore_sig_int);

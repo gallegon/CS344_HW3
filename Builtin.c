@@ -22,10 +22,14 @@ void cd_smallsh(BUILTIN* b) {
 }
 
 void status_smallsh(int* status) {
-	printf("status: %d\n", *status);
+	printf("exit value: %d\n", *status);
 }
 
-void handle_builtin(BUILTIN* b, int* status) {
+void exit_smallsh(bool* running) {
+	*running = false;	
+}
+
+void handle_builtin(BUILTIN* b, int* status, bool* running) {
 	if (strcmp(b->builtin_type, "cd") == 0) {
 		cd_smallsh(b);
 	}
@@ -33,7 +37,7 @@ void handle_builtin(BUILTIN* b, int* status) {
 		status_smallsh(status);
 	}
 	else {
-		//do exit	
+		exit_smallsh(running);	
 	}
 }
 

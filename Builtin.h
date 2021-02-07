@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 typedef struct Builtin BUILTIN;
 
@@ -18,9 +19,10 @@ void init_builtin(BUILTIN*);
 
 void cd_smallsh(BUILTIN*);
 void status_smallsh(int*);
-void exit_smallsh(/*type not yet defined*/);
+void exit_smallsh(bool* running);
 
-void handle_builtin(BUILTIN*, int*);
+void handle_builtin(BUILTIN*, int*, bool*);
 void parse_builtin(BUILTIN*, char*);
 void free_builtin(BUILTIN*);
+
 #endif
