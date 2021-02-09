@@ -1,3 +1,7 @@
+/* Name: Nicholai Gallegos
+ * File: DynamicArray.h
+ * Date: 2/8/2021
+ */ 
 #ifndef __DYNAMIC_ARRAY_H
 #define __DYNAMIC_ARRAY_H
 
@@ -5,6 +9,8 @@
 #include <string.h>
 
 #define _INITIAL_SIZE 16
+
+/* struct definitions, type definitions, function prototypes for DYNARR */
 
 typedef struct DynamicArray DYNARR;
 

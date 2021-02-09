@@ -1,3 +1,7 @@
+/* Name: Nicholai Gallegos
+ * File: Builtin.h
+ * Date: 2/8/2021
+ */
 #ifndef __BUILTIN_H
 #define __BUILTIN_H
 
@@ -7,6 +11,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+
+/* struct definitions, typedef, function prototypes for struct Builtin */
 
 typedef struct Builtin BUILTIN;
 

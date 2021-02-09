@@ -1,17 +1,13 @@
+/* Name: Nicholai Gallegos
+ * File: DynamicArray.h
+ * Date: 2/8/2021
+ */
 #include "DynamicArray.h"
 
-/*
-void init_dynamic_array(struct DynamicArray* d, int size) {
-    //d->array = (int*) malloc(sizeof(int) * 20);
-	d->strings = (char**) malloc(sizeof(char*) * size);
-	d->count = 0;
-
-	memset(d->array, 0, 20);
-
-	d->capacity = 20;
-}
-*/
-
+/* Name: init_dynamic_array
+ * Desc: initializes a dynamic array struct with an array
+ * of n = size char* pointers
+ */ 
 void init_dynamic_array(DYNARR* d, int size) {
 	d->strings = (char**) malloc(sizeof(char*) * size);
 	d->count = 0;
@@ -23,6 +19,9 @@ void init_dynamic_array(DYNARR* d, int size) {
 	d->capacity = size;
 }
 
+/* Name: add_array
+ * Desc: adds a string str to the string array for a DYNARR struct
+ */
 void add_array(DYNARR* d, char* str) {
 	//resize array if full
 	if (d->capacity == d->count) {
@@ -37,6 +36,10 @@ void add_array(DYNARR* d, char* str) {
 	d->count++;
 }
 
+/* Name _resize_array
+ * Desc: resizes the dynamic array to be 10 larger than previous.  This is 
+ * used when the array reaches capacity 
+ * */
 void _resize_array(DYNARR* d) {
 	int new_size = d->capacity + 10;
 	int old_size = d->count;
@@ -64,6 +67,9 @@ void _resize_array(DYNARR* d) {
 	temp = NULL;
 }
 
+/* Name: free_dynamic_array
+ * Desc: frees the string array within the DYNARR struct 
+ */
 void free_dynamic_array(DYNARR* d) {
 	for (int i = 0; i < d->capacity; ++i) {
 		free(d->strings[i]);
@@ -73,55 +79,4 @@ void free_dynamic_array(DYNARR* d) {
 	free(d->strings);
 
 }
-/*
-void resize_array(struct DynamicArray* d) {
-	int new_size = d->capacity + 10;
-	int* temp = (int*) malloc(sizeof(int) * new_size);
-
-	memset(temp, 0, new_size);
-
-   for (int i = 0; i < d->capacity; ++i) {
-       temp[i] = d->array[i];
-    }
-
-    free(d->array);
-
-    d->array = (int*) malloc(sizeof(int) * new_size);
-    d->capacity = new_size;
-
-    for (int i = 0; i < new_size; ++i) {
-        d->array[i] = temp[i];
-    }
-
-    free(temp);
-}
-
-
-void add_array(struct DynamicArray* d, int n) {
-    if (d->capacity == d->count) {
-        resize_array(d);
-    }
-
-    d->array[d->count] = n;
-    d->count++;
-}
-
-void remove_array(struct DynamicArray* d, int n) {
-    for (int i = 0; i < d->count; ++i) {
-        if (d->array[i] == n && i == 0 && d->count == 1) {
-            d->array[0] = 0;
-            d->count--;
-        }
-        else if (d->array[i] == n) {
-            d->array[i] = d->array[(d->count) - 1];
-            d->array[(d->count) - 1] = 0;
-            d->count--;
-        }
-    }
-}
-
-void free_dynamic_array(struct DynamicArray* d) {
-    free(d->array);
-}
-*/
 
